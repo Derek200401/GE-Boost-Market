@@ -8,10 +8,15 @@
     drawer.classList.toggle("is-open", open);
     overlay.classList.toggle("is-visible", open);
     document.body.classList.toggle("drawer-open", open);
+    openMenu?.setAttribute("aria-expanded", String(open));
+    drawer.setAttribute("aria-hidden", String(!open));
   };
   openMenu?.addEventListener("click", () => setDrawer(true));
   closeMenu?.addEventListener("click", () => setDrawer(false));
   overlay?.addEventListener("click", () => setDrawer(false));
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setDrawer(false);
+  });
   document.querySelectorAll(".drawer-link").forEach((link) => link.addEventListener("click", () => setDrawer(false)));
 
   const category = document.querySelector("#category");
