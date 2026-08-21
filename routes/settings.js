@@ -9,6 +9,7 @@ const asyncHandler = require("../middleware/asyncHandler");
 const router = express.Router();
 
 router.get("/settings", requireAuth, asyncHandler(async (req, res) => {
+  if (req.currentUser.isAdmin) return res.redirect("/admin");
   const flash = req.session.flash || null;
   delete req.session.flash;
 
@@ -20,6 +21,7 @@ router.get("/settings", requireAuth, asyncHandler(async (req, res) => {
 }));
 
 router.post("/settings/change-password", requireAuth, asyncHandler(async (req, res) => {
+  if (req.currentUser.isAdmin) return res.redirect("/admin");
   const { currentPassword, newPassword, confirmNewPassword, csrfToken } = req.body;
 
   const fail = (message) => {

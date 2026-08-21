@@ -27,6 +27,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
+if (isProduction && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32)) {
+  throw new Error("SESSION_SECRET must be at least 32 characters in production.");
+}
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -58,7 +62,7 @@ app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 app.use(
   session({
     name: "hydra.sid",
-    secret: process.env.SESSION_SECRET || "insecure_dev_secret_change_me",
+    secret: process.env.SESSION_SECRET || "local_development_secret",
     resave: false,
     saveUninitialized: false,
     store: createSessionStore(),

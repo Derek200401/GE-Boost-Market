@@ -13,6 +13,10 @@
 - Insufficient user balance returns `No Credits, recharge first`.
 - Missing, invalid, empty, or failing provider balance checks return `This Service is Unavailable` without deducting credits.
 - Failed upstream orders refund the wallet charge and do not expose upstream API responses to the browser.
+- Added strict integer quantity validation, fixed the duplicate Facebook service key, and batched status refreshes in groups of 100.
+- Orders are recorded before provider submission so a provider success cannot leave the local history empty.
+- Production now fails closed when Firebase session persistence or `SESSION_SECRET` is missing.
+- Docker dependency installation uses the public npm registry and no longer depends on the Replit-generated lockfile URLs.
 - Preserved server-only Firebase Admin SDK access, CSRF checks, rate limiting, CSP, same-origin checks, secure session cookies, and Turnstile support.
 
 ## Important security boundary

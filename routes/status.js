@@ -14,7 +14,7 @@ function mapStatus(rawStatus) {
   if (["completed", "partial"].includes(normalized)) return "DONE";
   if (["in progress", "processing"].includes(normalized)) return "IN PROGRESS";
   if (["pending"].includes(normalized)) return "PENDING";
-  if (["canceled", "cancelled"].includes(normalized)) return "PENDING";
+  if (["canceled", "cancelled"].includes(normalized)) return "CANCELED";
   return "PENDING";
 }
 
@@ -36,7 +36,9 @@ router.post("/status/refresh", requireAuth, orderLimiter, asyncHandler(async (re
     return res.redirect("/status");
   }
   const orders = await db.getOrdersByUser(req.currentUser.id);
-  const pending = orders.filter((o) => mapStatus(o.status) !== "DONE");
+  const pending = orders.filter((o) =>
+    o.jtsmmOrderId && !["DONE", "CANCELED"].includes(mapStatus(o.status))
+  );
 
   if (pending.length === 0) {
     req.session.flash = { type: "success", message: "All orders are already up to date." };
@@ -44,14 +46,17 @@ router.post("/status/refresh", requireAuth, orderLimiter, asyncHandler(async (re
   }
 
   try {
-    const idsToOrder = new Map(pending.map((o) => [o.jtsmmOrderId, o.id]));
-    const result = await jtsmm.getMultipleOrderStatus([...idsToOrder.keys()]);
+    for (let index = 0; index < pending.length; index += 100) {
+      const batch = pending.slice(index, index + 100);
+      const idsToOrder = new Map(batch.map((o) => [o.jtsmmOrderId, o.id]));
+      const result = await jtsmm.getMultipleOrderStatus([...idsToOrder.keys()]);
 
-    if (result && typeof result === "object") {
-      for (const [jtsmmOrderId, localOrderId] of idsToOrder.entries()) {
-        const entry = result[jtsmmOrderId];
-        if (entry && entry.status) {
-          await db.updateOrderStatus(localOrderId, entry.status);
+      if (result && typeof result === "object") {
+        for (const [jtsmmOrderId, localOrderId] of idsToOrder.entries()) {
+          const entry = result[jtsmmOrderId];
+          if (entry && entry.status) {
+            await db.updateOrderStatus(localOrderId, entry.status);
+          }
         }
       }
     }

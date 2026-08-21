@@ -22,12 +22,11 @@ npm start
 ```
 
 Railway is configured to build from the included `Dockerfile`. The image
-installs runtime dependencies with `npm install --omit=dev --ignore-scripts`, then starts with
-`node start.js`. The startup guard also installs runtime dependencies if the
-platform skips its build install layer. This prevents the deployment from starting without `express` or
-`dotenv`, which can happen when a Nixpacks install layer is skipped. Do not set the deprecated npm variable
-`NPM_CONFIG_PRODUCTION=true`; use `--omit=dev` instead. `NODE_ENV=production`
-is still valid and should remain set for a production deployment.
+installs runtime dependencies from the public npm registry, then starts with
+`node start.js`. The startup guard stops immediately if the image is missing
+`express`, which usually means a Railway Volume is mounted over `/app` or
+`/app/node_modules`. Do not mount a volume over the application directory;
+use a narrow path such as `/app/data` if persistent files are needed.
 
 Open `http://localhost:3000`. In development Turnstile can be omitted. In production, configure Turnstile or login/signup fail closed.
 
@@ -74,6 +73,8 @@ The included `package.json` gives Railway the start command (`node server.js`). 
 ## Admin
 
 The admin login uses `ADMIN_USERNAME` and `ADMIN_PASSWORD`. There is no password fallback in the application, so the admin account is disabled until both values are configured. Admin maintenance access is not blocked by maintenance mode.
+
+Production also requires a 32-character `SESSION_SECRET` and Firebase configuration. The server exits instead of using an in-memory session store when those values are missing.
 
 ## Provider contract
 

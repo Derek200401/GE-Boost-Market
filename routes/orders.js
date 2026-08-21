@@ -91,8 +91,8 @@ router.post("/orders", requireAuth, orderLimiter, asyncHandler(async (req, res) 
     return fail("Link must start with http:// or https://");
   }
 
-  const qty = parseInt(quantity, 10);
-  if (!Number.isFinite(qty) || qty <= 0) {
+  const qty = Number(quantity);
+  if (!Number.isInteger(qty) || qty <= 0) {
     return fail("Please enter a valid quantity.");
   }
   if (qty < service.min || qty > service.max) {
@@ -118,13 +118,34 @@ router.post("/orders", requireAuth, orderLimiter, asyncHandler(async (req, res) 
     return fail("This Service is Unavailable");
   }
 
-  let deductedUser;
   try {
-    deductedUser = await db.deductBalance(currentUser.id, totalCharge);
+    await db.deductBalance(currentUser.id, totalCharge);
   } catch (err) {
     if (err.message === "INSUFFICIENT_FUNDS") {
       return fail("No Credits, recharge first");
     }
+    return fail("Something went wrong. Please try again.");
+  }
+
+  const orderId = uuidv4();
+  const orderRecord = {
+    id: orderId,
+    userId: currentUser.id,
+    category: service.category,
+    serviceName: service.name,
+    link: trimmedLink,
+    quantity: qty,
+    totalCharge,
+    jtsmmOrderId: null,
+    status: "Submitting",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    await db.createOrder(orderRecord);
+  } catch (err) {
+    await db.refundBalance(currentUser.id, totalCharge);
     return fail("Something went wrong. Please try again.");
   }
 
@@ -137,29 +158,20 @@ router.post("/orders", requireAuth, orderLimiter, asyncHandler(async (req, res) 
     });
   } catch (err) {
     await db.refundBalance(currentUser.id, totalCharge);
+    await db.updateOrder(orderId, { status: "Failed" });
     return fail("This Service is Unavailable");
   }
 
   if (!jtsmmResponse || jtsmmResponse.error || !jtsmmResponse.order) {
     await db.refundBalance(currentUser.id, totalCharge);
+    await db.updateOrder(orderId, { status: "Failed" });
     return fail("This Service is Unavailable");
   }
 
-  const orderRecord = {
-    id: uuidv4(),
-    userId: currentUser.id,
-    category: service.category,
-    serviceName: service.name,
-    link: trimmedLink,
-    quantity: qty,
-    totalCharge,
+  await db.updateOrder(orderId, {
     jtsmmOrderId: String(jtsmmResponse.order),
     status: "Pending",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  await db.createOrder(orderRecord);
+  });
 
   req.session.flash = {
     type: "success",

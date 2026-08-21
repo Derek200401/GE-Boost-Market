@@ -36,6 +36,14 @@ const SERVICES = [
   {
     id: "fb-wow-react",
     category: "Facebook",
+    name: "Facebook 1000 Wow React",
+    serviceId: 6161,
+    pricePer1000: 15,
+    available: true,
+    min: MIN_QUANTITY,
+    max: MAX_QUANTITY,
+  },
+  {
     id: "fb-haha-react",
     category: "Facebook",
     name: "Facebook 1000 Haha React",
