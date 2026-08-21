@@ -18,9 +18,6 @@ function computeTotal(service, quantity) {
   return Math.round(raw * 100) / 100;
 }
 
-// Public-safe service list for a category: only id, name, and
-// availability are ever sent to the browser. The JTSMM service ID
-// and the upstream API details never leave the server.
 router.get("/api/services", requireAuth, (req, res) => {
   const category = String(req.query.category || "");
   if (!CATEGORIES.includes(category)) {
@@ -34,9 +31,6 @@ router.get("/api/services", requireAuth, (req, res) => {
   res.json({ services });
 });
 
-// Live total calculation as the user types a quantity. Price logic
-// stays entirely server-side so it cannot be tampered with from the
-// browser.
 router.post("/api/quote", requireAuth, express.json(), (req, res) => {
   const { serviceId, quantity } = req.body || {};
   const service = getServiceById(String(serviceId || ""));
@@ -109,23 +103,14 @@ router.post("/orders", requireAuth, orderLimiter, asyncHandler(async (req, res) 
 
   const totalCharge = computeTotal(service, qty);
 
-  // Refresh the wallet from Firebase immediately before charging. Never
-  // trust the balance that was loaded when the page was rendered.
   const currentUser = await db.findUserById(req.session.userId);
   if (!currentUser || Number(currentUser.balance) < totalCharge) {
     return fail("No Credits, recharge first");
   }
 
-  // Check upstream credentials and funds before touching the user's wallet.
-  // The provider balance is never trusted from the browser and is never
-  // returned to it.
   try {
     const providerBalance = await jtsmm.getBalance();
     const available = Number(providerBalance && providerBalance.balance);
-    // The upstream panel may report balance in USD while Hydra charges
-    // users in PHP credits. Only the provider's zero/unusable state is
-    // used as the availability guard here; the user's PHP wallet remains
-    // the authoritative retail-charge check.
     if (!Number.isFinite(available) || available <= 0) {
       return fail("This Service is Unavailable");
     }
@@ -133,9 +118,6 @@ router.post("/orders", requireAuth, orderLimiter, asyncHandler(async (req, res) 
     return fail("This Service is Unavailable");
   }
 
-  // Deduct first (atomic check-and-deduct), then attempt the
-  // upstream order. If the upstream call fails, refund the user so
-  // they are never charged for an order that never went through.
   let deductedUser;
   try {
     deductedUser = await db.deductBalance(currentUser.id, totalCharge);

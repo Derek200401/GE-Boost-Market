@@ -5,18 +5,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
 
-# Install runtime dependencies inside the image. This avoids Railway/Nixpacks
-# skipping the install layer, which caused express and dotenv to be absent.
 COPY package.json package-lock.json ./
 
-# Cache-buster: a prior broken npm install got cached as a "successful" Docker
-# layer, so later builds kept reusing it without ever actually reinstalling
-# express. Changing this ARG's value invalidates that layer and forces a real
-# npm install. Bump the date any time deploys crash with express missing
-# right after a build that shows "RUN npm install ... cached".
 ARG DEPS_CACHE_BUST=2026-08-22-02
-# The checked-in lockfile was generated through a private development mirror.
-# Railway must resolve packages from the public registry during its image build.
 RUN npm install --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false
 
 COPY . .

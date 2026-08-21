@@ -9,11 +9,6 @@ const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 
-/**
- * Maps a raw JTSMM order status string to one of the three display
- * states the website exposes to users: PENDING, IN PROGRESS, DONE.
- * The raw upstream label is intentionally not shown to the user.
- */
 function mapStatus(rawStatus) {
   const normalized = String(rawStatus || "").toLowerCase();
   if (["completed", "partial"].includes(normalized)) return "DONE";
@@ -35,11 +30,6 @@ router.get("/status", requireAuth, asyncHandler(async (req, res) => {
   res.render("status", { orders, flash, csrfToken: getOrCreateCsrfToken(req) });
 }));
 
-/**
- * Refreshes the status of the user's non-final orders against the
- * upstream JTSMM API and updates local records. Rate-limited since
- * this triggers outbound API calls.
- */
 router.post("/status/refresh", requireAuth, orderLimiter, asyncHandler(async (req, res) => {
   if (!verifyCsrfToken(req, req.body.csrfToken)) {
     req.session.flash = { type: "error", message: "Session expired. Please refresh the page and try again." };

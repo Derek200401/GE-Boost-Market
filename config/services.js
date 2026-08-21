@@ -1,26 +1,8 @@
-/**
- * Fixed service catalog for Hydra Boosting.
- *
- * Only the entries below with `available: true` can actually be
- * ordered. Entries with `available: false` are shown in the UI as
- * "Unavailable" so users can see the platform exists without being
- * able to place an order against a service that has no fixed price
- * or JTSMM service ID assigned yet.
- *
- * `serviceId` maps directly to the JTSMM Panel `service` parameter.
- * `pricePer1000` is the fixed retail price in PHP charged to the
- * website's users, independent of whatever the upstream JTSMM rate
- * actually is. This price and the JTSMM service ID are never sent
- * to the browser -- only the category/service name and the
- * calculated total appear on the client.
- */
-
 const CATEGORIES = ["Instagram", "Tiktok", "Facebook", "Telegram"];
 const MIN_QUANTITY = 3000;
 const MAX_QUANTITY = 1000000;
 
 const SERVICES = [
-  // ---------------------------- Facebook ----------------------------
   {
     id: "fb-followers",
     category: "Facebook",
@@ -84,7 +66,6 @@ const SERVICES = [
     max: MAX_QUANTITY,
   },
 
-  // ---------------------------- Instagram ----------------------------
   {
     id: "ig-followers",
     category: "Instagram",
@@ -116,7 +97,6 @@ const SERVICES = [
     max: MAX_QUANTITY,
   },
 
-  // ---------------------------- Telegram ----------------------------
   {
     id: "tg-members",
     category: "Telegram",
@@ -148,7 +128,6 @@ const SERVICES = [
     max: MAX_QUANTITY,
   },
 
-  // ----------------------------- Tiktok -----------------------------
   {
     id: "tt-followers",
     category: "Tiktok",

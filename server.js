@@ -1,6 +1,3 @@
-// Railway loads environment variables itself. dotenv remains useful locally,
-// but a missing optional dotenv package must not prevent the server from
-// starting when the platform has already injected the environment.
 try {
   require("dotenv").config();
 } catch (error) {
@@ -33,26 +30,18 @@ const isProduction = process.env.NODE_ENV === "production";
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// Trust the first proxy hop (Railway sits behind a load balancer),
-// required for correct client IPs in rate limiting and secure cookies.
 app.set("trust proxy", 1);
 
-// ---------------------------------------------------------------
-// Security headers (anti-deface / anti-clickjacking / anti-XSS)
-// ---------------------------------------------------------------
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        // Cloudflare Turnstile requires loading its script/frame.
         scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
         frameSrc: ["https://challenges.cloudflare.com"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:"],
         connectSrc: ["'self'"],
-        // Never allow this site to be embedded in a frame elsewhere,
-        // which is the core anti-deface / anti-clone-via-iframe control.
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
@@ -64,14 +53,8 @@ app.use(
 );
 app.disable("x-powered-by");
 
-// ---------------------------------------------------------------
-// Body parsing
-// ---------------------------------------------------------------
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 
-// ---------------------------------------------------------------
-// Sessions
-// ---------------------------------------------------------------
 app.use(
   session({
     name: "hydra.sid",
@@ -83,19 +66,13 @@ app.use(
       httpOnly: true,
       secure: isProduction,
       sameSite: "strict",
-      maxAge: 1000 * 60 * 60 * 12, // 12 hours
+      maxAge: 1000 * 60 * 60 * 12,
     },
   })
 );
 
-// ---------------------------------------------------------------
-// Rate limiting (anti-DDoS / anti-flood at the application layer)
-// ---------------------------------------------------------------
 app.use(globalLimiter);
 
-// ---------------------------------------------------------------
-// Anti-clone: reject cross-origin state-changing requests
-// ---------------------------------------------------------------
 app.use(originCheck);
 
 app.use(async (req, res, next) => {
@@ -106,18 +83,12 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// ---------------------------------------------------------------
-// Static assets
-// ---------------------------------------------------------------
 app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: isProduction ? "1d" : 0,
   })
 );
 
-// ---------------------------------------------------------------
-// Routes
-// ---------------------------------------------------------------
 app.get("/", (req, res) => {
   res.redirect(req.session && req.session.userId ? "/dashboard" : "/login");
 });
@@ -129,16 +100,10 @@ app.use(statusRoutes);
 app.use(settingsRoutes);
 app.use(adminRoutes);
 
-// ---------------------------------------------------------------
-// 404 handler
-// ---------------------------------------------------------------
 app.use((req, res) => {
   res.status(404).render("404");
 });
 
-// ---------------------------------------------------------------
-// Central error handler (never leak stack traces / internals)
-// ---------------------------------------------------------------
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).render("500");

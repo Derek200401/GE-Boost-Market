@@ -77,8 +77,6 @@ router.post("/signup", authLimiter, redirectIfAuthed, asyncHandler(async (req, r
     return renderError("Something went wrong. Please try again.");
   }
 
-  // Registration deliberately does not create an authenticated session.
-  // The user must prove ownership of the new account through the login flow.
   res.redirect("/login?success=" + encodeURIComponent("Account created successfully! Please log in."));
 }));
 
@@ -117,8 +115,6 @@ router.post("/login", authLimiter, redirectIfAuthed, asyncHandler(async (req, re
   }
 
   const user = await db.findUserByUsername(username);
-  // Constant-shape response whether the user exists or not, to avoid
-  // leaking which usernames are registered.
   const passwordHash = user ? user.passwordHash : "$2a$12$invalidinvalidinvalidinvalidinvalidinva";
   const matches = await bcrypt.compare(password, passwordHash);
 
