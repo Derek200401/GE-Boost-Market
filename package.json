@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node start.js",
-    "check": "node --check server.js && node --check config/services.js && node --check lib/db.js"
+    "check": "node --check server.js && node --check start.js && node --check config/services.js && node --check lib/db.js && node --check lib/firebaseSessionStore.js && node --check lib/security.js && node --check middleware/asyncHandler.js && node --check middleware/auth.js && node --check middleware/originCheck.js && node --check middleware/rateLimit.js && node --check routes/admin.js && node --check routes/auth.js && node --check routes/dashboard.js && node --check routes/orders.js && node --check routes/settings.js && node --check routes/status.js && node --check services/jtsmmClient.js && node --check public/js/app.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

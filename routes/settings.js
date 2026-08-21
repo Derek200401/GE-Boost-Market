@@ -4,10 +4,11 @@ const bcrypt = require("bcryptjs");
 const db = require("../lib/db");
 const { requireAuth } = require("../middleware/auth");
 const { getOrCreateCsrfToken, verifyCsrfToken } = require("../lib/security");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 
-router.get("/settings", requireAuth, async (req, res) => {
+router.get("/settings", requireAuth, asyncHandler(async (req, res) => {
   const flash = req.session.flash || null;
   delete req.session.flash;
 
@@ -16,9 +17,9 @@ router.get("/settings", requireAuth, async (req, res) => {
     adminTelegram: process.env.ADMIN_TELEGRAM || "https://t.me/wanitomodzz",
     flash,
   });
-});
+}));
 
-router.post("/settings/change-password", requireAuth, async (req, res) => {
+router.post("/settings/change-password", requireAuth, asyncHandler(async (req, res) => {
   const { currentPassword, newPassword, confirmNewPassword, csrfToken } = req.body;
 
   const fail = (message) => {
@@ -53,6 +54,6 @@ router.post("/settings/change-password", requireAuth, async (req, res) => {
 
   req.session.flash = { type: "success", message: "Password updated successfully." };
   res.redirect("/settings");
-});
+}));
 
 module.exports = router;

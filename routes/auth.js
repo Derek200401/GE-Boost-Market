@@ -6,6 +6,7 @@ const db = require("../lib/db");
 const { verifyTurnstile, getOrCreateCsrfToken, verifyCsrfToken } = require("../lib/security");
 const { redirectIfAuthed, markActive } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimit");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get("/signup", redirectIfAuthed, (req, res) => {
   });
 });
 
-router.post("/signup", authLimiter, redirectIfAuthed, async (req, res) => {
+router.post("/signup", authLimiter, redirectIfAuthed, asyncHandler(async (req, res) => {
   const { username, password, confirmPassword, csrfToken } = req.body;
   const turnstileToken = req.body["cf-turnstile-response"];
 
@@ -79,7 +80,7 @@ router.post("/signup", authLimiter, redirectIfAuthed, async (req, res) => {
   // Registration deliberately does not create an authenticated session.
   // The user must prove ownership of the new account through the login flow.
   res.redirect("/login?success=" + encodeURIComponent("Account created successfully! Please log in."));
-});
+}));
 
 router.get("/login", redirectIfAuthed, (req, res) => {
   res.render("login", {
@@ -90,7 +91,7 @@ router.get("/login", redirectIfAuthed, (req, res) => {
   });
 });
 
-router.post("/login", authLimiter, redirectIfAuthed, async (req, res) => {
+router.post("/login", authLimiter, redirectIfAuthed, asyncHandler(async (req, res) => {
   const { username, password, csrfToken } = req.body;
   const turnstileToken = req.body["cf-turnstile-response"];
 
@@ -121,8 +122,8 @@ router.post("/login", authLimiter, redirectIfAuthed, async (req, res) => {
   const passwordHash = user ? user.passwordHash : "$2a$12$invalidinvalidinvalidinvalidinvalidinva";
   const matches = await bcrypt.compare(password, passwordHash);
 
-  const adminUsername = process.env.ADMIN_USERNAME || "Admin";
-  const adminPassword = process.env.ADMIN_PASSWORD || "DerekDekDek@200401";
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
   if (username === adminUsername && password === adminPassword) {
     return req.session.regenerate((err) => {
       if (err) return renderError("Something went wrong. Please try again.");
@@ -143,7 +144,7 @@ router.post("/login", authLimiter, redirectIfAuthed, async (req, res) => {
     db.updateUser(user.id, { lastLoginAt: new Date().toISOString() }).catch(() => {});
     res.redirect("/dashboard");
   });
-});
+}));
 
 router.post("/logout", (req, res) => {
   req.session.destroy(() => {

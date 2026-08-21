@@ -2,11 +2,12 @@ const express = require("express");
 const db = require("../lib/db");
 const { requireAdmin, isUserActive } = require("../middleware/auth");
 const { getOrCreateCsrfToken, verifyCsrfToken } = require("../lib/security");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 router.use("/admin", requireAdmin);
 
-router.get("/admin", async (req, res) => {
+router.get("/admin", asyncHandler(async (req, res) => {
   const flash = req.session.flash || null;
   delete req.session.flash;
   res.render("admin", {
@@ -16,9 +17,9 @@ router.get("/admin", async (req, res) => {
     csrfToken: getOrCreateCsrfToken(req),
     flash,
   });
-});
+}));
 
-router.post("/admin/users/:id/balance", async (req, res) => {
+router.post("/admin/users/:id/balance", asyncHandler(async (req, res) => {
   if (!verifyCsrfToken(req, req.body.csrfToken)) return res.status(403).send("Invalid request");
   const amount = Number(req.body.amount);
   const mode = req.body.mode || "add";
@@ -31,19 +32,19 @@ router.post("/admin/users/:id/balance", async (req, res) => {
     req.session.flash = { type: "error", message: "Could not update credits." };
   }
   res.redirect("/admin");
-});
+}));
 
-router.post("/admin/users/:id/ban", async (req, res) => {
+router.post("/admin/users/:id/ban", asyncHandler(async (req, res) => {
   if (!verifyCsrfToken(req, req.body.csrfToken)) return res.status(403).send("Invalid request");
   const user = await db.findUserById(req.params.id);
   if (user) await db.updateUser(user.id, { banned: !user.banned });
   res.redirect("/admin");
-});
+}));
 
-router.post("/admin/maintenance", async (req, res) => {
+router.post("/admin/maintenance", asyncHandler(async (req, res) => {
   if (!verifyCsrfToken(req, req.body.csrfToken)) return res.status(403).send("Invalid request");
   await db.updateSettings({ maintenanceMode: req.body.enabled === "on" });
   res.redirect("/admin");
-});
+}));
 
 module.exports = router;

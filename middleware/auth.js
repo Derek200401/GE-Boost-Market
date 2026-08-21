@@ -1,4 +1,5 @@
 const db = require("../lib/db");
+const asyncHandler = require("./asyncHandler");
 const activeUsers = new Map();
 
 function markActive(userId) {
@@ -9,7 +10,7 @@ function isUserActive(userId) {
   return Date.now() - (activeUsers.get(userId) || 0) < 15 * 60 * 1000;
 }
 
-async function requireAuth(req, res, next) {
+const requireAuth = asyncHandler(async (req, res, next) => {
   if (req.session && req.session.isAdmin) {
     req.currentUser = { id: "admin", username: "Admin", balance: 0, isAdmin: true };
     res.locals.currentUser = req.currentUser;
@@ -27,7 +28,7 @@ async function requireAuth(req, res, next) {
   res.locals.currentUser = user;
   markActive(user.id);
   next();
-}
+});
 
 function requireAdmin(req, res, next) {
   if (!req.session || !req.session.isAdmin) return res.redirect("/login");
@@ -36,14 +37,14 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-async function blockDuringMaintenance(req, res, next) {
+const blockDuringMaintenance = asyncHandler(async (req, res, next) => {
   if (req.session && req.session.isAdmin) return next();
   const db = require("../lib/db");
   if ((await db.getSettings()).maintenanceMode) {
     return res.status(503).render("maintenance", { title: "Maintenance · Hydra Boosting" });
   }
   next();
-}
+});
 
 function redirectIfAuthed(req, res, next) {
   if (req.session && (req.session.userId || req.session.isAdmin)) {

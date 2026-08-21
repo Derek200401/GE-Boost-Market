@@ -42,7 +42,7 @@ Open `http://localhost:3000`. In development Turnstile can be omitted. In produc
 | `BASE_API_URL` | for live orders | provider API URL, server-only |
 | `API_KEY` | for live orders | provider API key, server-only |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | production | Cloudflare Turnstile |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | production | change the defaults immediately |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | production | private admin credentials; both must be configured |
 | `TIKTOK_COMMENT_SERVICE_ID` / `TIKTOK_COMMENT_PRICE` | optional | enables the configured default Tiktok comment service |
 | `ADMIN_TELEGRAM` | optional | support contact |
 | `FIREBASE_DATABASE_URL` | yes | Firebase RTDB URL |
@@ -73,7 +73,7 @@ The included `package.json` gives Railway the start command (`node server.js`). 
 
 ## Admin
 
-The first admin login uses `ADMIN_USERNAME` and `ADMIN_PASSWORD` (the requested local defaults are `Admin` / `DerekDekDek@200401`). Set a private `ADMIN_PASSWORD` in Railway before deployment. Admin maintenance access is not blocked by maintenance mode.
+The admin login uses `ADMIN_USERNAME` and `ADMIN_PASSWORD`. There is no password fallback in the application, so the admin account is disabled until both values are configured. Admin maintenance access is not blocked by maintenance mode.
 
 ## Provider contract
 

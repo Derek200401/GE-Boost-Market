@@ -8,7 +8,7 @@
 - Admin login now lands on the main dashboard, where the admin-only panel button is available.
 - Registration now writes the account to Firebase and sends the user to login without creating a session.
 - Added the requested account-created success message on the login screen.
-- Set the requested local admin credential fallback to `Admin` / `DerekDekDek@200401`; production deployments should override it with Railway variables.
+- Removed the hardcoded admin credential fallback; configure `ADMIN_USERNAME` and `ADMIN_PASSWORD` through deployment secrets.
 - Order submission now refreshes the user's Firebase balance immediately before charging.
 - Insufficient user balance returns `No Credits, recharge first`.
 - Missing, invalid, empty, or failing provider balance checks return `This Service is Unavailable` without deducting credits.

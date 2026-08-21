@@ -7,6 +7,7 @@ const jtsmm = require("../services/jtsmmClient");
 const { requireAuth } = require("../middleware/auth");
 const { verifyCsrfToken } = require("../lib/security");
 const { orderLimiter } = require("../middleware/rateLimit");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 
@@ -64,7 +65,7 @@ router.post("/api/quote", requireAuth, express.json(), (req, res) => {
   });
 });
 
-router.post("/orders", requireAuth, orderLimiter, async (req, res) => {
+router.post("/orders", requireAuth, orderLimiter, asyncHandler(async (req, res) => {
   const { category, serviceId, link, quantity, csrfToken } = req.body;
 
   const fail = (message) => {
@@ -183,6 +184,6 @@ router.post("/orders", requireAuth, orderLimiter, async (req, res) => {
     message: `Order placed successfully for ${service.name}. Total charged: PHP ${totalCharge.toFixed(2)}`,
   };
   res.redirect("/dashboard");
-});
+}));
 
 module.exports = router;

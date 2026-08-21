@@ -5,6 +5,7 @@ const jtsmm = require("../services/jtsmmClient");
 const { requireAuth } = require("../middleware/auth");
 const { orderLimiter } = require("../middleware/rateLimit");
 const { getOrCreateCsrfToken, verifyCsrfToken } = require("../lib/security");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ function mapStatus(rawStatus) {
   return "PENDING";
 }
 
-router.get("/status", requireAuth, async (req, res) => {
+router.get("/status", requireAuth, asyncHandler(async (req, res) => {
   const orders = (await db.getOrdersByUser(req.currentUser.id)).map((o) => ({
     ...o,
     displayStatus: mapStatus(o.status),
@@ -32,14 +33,14 @@ router.get("/status", requireAuth, async (req, res) => {
   delete req.session.flash;
 
   res.render("status", { orders, flash, csrfToken: getOrCreateCsrfToken(req) });
-});
+}));
 
 /**
  * Refreshes the status of the user's non-final orders against the
  * upstream JTSMM API and updates local records. Rate-limited since
  * this triggers outbound API calls.
  */
-router.post("/status/refresh", requireAuth, orderLimiter, async (req, res) => {
+router.post("/status/refresh", requireAuth, orderLimiter, asyncHandler(async (req, res) => {
   if (!verifyCsrfToken(req, req.body.csrfToken)) {
     req.session.flash = { type: "error", message: "Session expired. Please refresh the page and try again." };
     return res.redirect("/status");
@@ -73,6 +74,6 @@ router.post("/status/refresh", requireAuth, orderLimiter, async (req, res) => {
   }
 
   res.redirect("/status");
-});
+}));
 
 module.exports = router;
