@@ -1,0 +1,6 @@
+node_modules
+.env
+.git
+*.zip
+data/*.corrupt.*
+npm-debug.log*

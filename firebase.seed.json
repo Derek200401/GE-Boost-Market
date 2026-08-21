@@ -1,0 +1,9 @@
+{
+  "hydra": {
+    "users": {},
+    "orders": {},
+    "settings": {
+      "maintenanceMode": false
+    }
+  }
+}

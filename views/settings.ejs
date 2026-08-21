@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { title: 'Settings - Hydra Boosting' }) %>
+</head>
+<body>
+  <%- include('partials/navbar', { active: 'settings' }) %>
+  <%- include('partials/drawer', { active: 'settings' }) %>
+
+  <main class="page">
+    <div class="container">
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Manage your account.</p>
+
+      <% if (flash) { %>
+        <div class="alert alert-<%= flash.type %>"><%= flash.message %></div>
+      <% } %>
+
+      <div class="card">
+        <h2 class="card-title">Change Password</h2>
+        <form action="/settings/change-password" method="POST">
+          <input type="hidden" name="csrfToken" value="<%= csrfToken %>" />
+
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" name="currentPassword" required minlength="8" />
+          </div>
+
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" name="newPassword" required minlength="8" />
+          </div>
+
+          <div class="form-group">
+            <label for="confirmNewPassword">Confirm New Password</label>
+            <input type="password" id="confirmNewPassword" name="confirmNewPassword" required minlength="8" />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Update Password</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Contact Admin</h2>
+        <p>Need help with an order or your account? Reach out to the admin directly on Telegram.</p>
+        <a href="<%= adminTelegram %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-block">
+          Contact Admin on Telegram
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <strong>Hydra Boosting</strong>
+    <span>Simple, transparent social media growth services with secure account management and real-time order tracking.</span>
+    <small>Use only on accounts and content you own or are authorized to manage.</small>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

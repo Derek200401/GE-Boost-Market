@@ -1,0 +1,4 @@
+:root{--bg:#15110f;--panel:#2a241e;--panel-2:#332b24;--line:#4b4036;--gold:#e8b68f;--gold-soft:#c99670;--purple:#75638e;--text:#f5eee7;--muted:#b7aaa0;--danger:#e88787;--success:#8fc79a}
+body{background:radial-gradient(circle at 85% -10%,#3a281d 0,transparent 34%),var(--bg)}
+.card,.order-card,.table-wrap{background:linear-gradient(145deg,#2d2721,#24201c)}
+.total-box{background:#352820;border-color:#89684f}.total-label{color:#e8b68f}.btn{background:#75638e}.balance-pill{background:#352820;border-color:#69503e}

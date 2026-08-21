@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { title: 'Boost Status - Hydra Boosting' }) %>
+</head>
+<body>
+  <%- include('partials/navbar', { active: 'status' }) %>
+  <%- include('partials/drawer', { active: 'status' }) %>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-header-row">
+        <div>
+          <h1 class="page-title">Boost Status</h1>
+          <p class="page-subtitle">Track the progress of your orders.</p>
+        </div>
+        <form action="/status/refresh" method="POST">
+          <input type="hidden" name="csrfToken" value="<%= csrfToken %>" />
+              <button type="submit" class="btn btn-outline">↻ Refresh</button>
+        </form>
+      </div>
+
+      <% if (flash) { %>
+        <div class="alert alert-<%= flash.type %>"><%= flash.message %></div>
+      <% } %>
+
+      <% if (orders.length === 0) { %>
+        <div class="card empty-state">
+          <p>You have no orders yet.</p>
+          <a href="/dashboard" class="btn btn-primary">Place your first order</a>
+        </div>
+      <% } else { %>
+        <div class="order-list">
+          <% orders.forEach(function(order) { %>
+            <div class="order-card">
+              <div class="order-card-top">
+                <span class="order-service"><%= order.serviceName %></span>
+                <span class="status-badge status-<%= order.displayStatus.replace(' ', '-').toLowerCase() %>">
+                  <%= order.displayStatus %>
+                </span>
+              </div>
+              <div class="order-card-details">
+                <div><span class="detail-label">Platform:</span> <%= order.category %></div>
+                <div><span class="detail-label">Quantity:</span> <%= order.quantity.toLocaleString() %></div>
+                <div><span class="detail-label">Total Charge:</span> PHP <%= Number(order.totalCharge).toFixed(2) %></div>
+                <div><span class="detail-label">Link:</span> <a href="<%= order.link %>" target="_blank" rel="noopener noreferrer">View</a></div>
+                <div><span class="detail-label">Ordered:</span> <%= new Date(order.createdAt).toLocaleString() %></div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <strong>Hydra Boosting</strong>
+    <span>Simple, transparent social media growth services with secure account management and real-time order tracking.</span>
+    <small>Use only on accounts and content you own or are authorized to manage.</small>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

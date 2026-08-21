@@ -1,0 +1,26 @@
+<div id="drawerOverlay" class="drawer-overlay"></div>
+
+<aside id="drawer" class="drawer" aria-label="Mobile navigation">
+  <div class="drawer-header">
+    <span class="brand-name">Hydra Boosting</span>
+    <button id="drawerClose" class="icon-btn" aria-label="Close menu" type="button">&times;</button>
+  </div>
+
+  <nav class="drawer-nav">
+    <a href="/status" class="drawer-link <%= active === 'status' ? 'active' : '' %>">
+       📊 Boost Status
+    </a>
+    <a href="/settings" class="drawer-link <%= active === 'settings' ? 'active' : '' %>">
+       ⚙️ Settings
+    </a>
+    <% if (currentUser && currentUser.isAdmin) { %>
+    <a href="/admin" class="drawer-link <%= active === 'admin' ? 'active' : '' %>">
+       🛡️ Admin Panel
+    </a>
+    <% } %>
+  </nav>
+
+  <form action="/logout" method="POST" class="drawer-logout">
+    <button type="submit" class="btn btn-outline btn-block">Logout</button>
+  </form>
+</aside>

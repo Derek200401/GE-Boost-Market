@@ -1,0 +1,25 @@
+<header class="topbar">
+  <button id="drawerToggle" class="icon-btn" aria-label="Open menu" type="button">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+
+  <a class="brand" href="/dashboard" aria-label="Open boost order">
+    <img class="brand-icon" src="/icon.png" alt="Hydra Boosting" /><span class="brand-name">Hydra <em>Boosting</em></span>
+  </a>
+
+  <nav class="desktop-nav" aria-label="Main navigation">
+    <a href="/dashboard" class="<%= active === 'dashboard' ? 'active' : '' %>">🚀 Boost Order</a>
+    <a href="/status" class="<%= active === 'status' ? 'active' : '' %>">📊 Boost Status</a>
+    <a href="/settings" class="<%= active === 'settings' ? 'active' : '' %>">⚙️ Settings</a>
+    <% if (currentUser && currentUser.isAdmin) { %>
+      <a href="/admin" class="<%= active === 'admin' ? 'active' : '' %>">🛡️ Admin Panel</a>
+    <% } %>
+  </nav>
+
+  <div class="balance-pill">
+    <span class="balance-label">💰 Credits</span>
+    <span class="balance-value">PHP <%= Number(currentUser.balance).toFixed(2) %></span>
+  </div>
+</header>
