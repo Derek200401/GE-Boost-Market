@@ -26,6 +26,15 @@ const { getSettings } = require("./lib/db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
+const maxShareableCredits = process.env.MAX_SHAREABLE_CREDITS;
+
+if (maxShareableCredits !== undefined && (
+  !/^\d+$/.test(maxShareableCredits.trim()) ||
+  !Number.isSafeInteger(Number(maxShareableCredits)) ||
+  Number(maxShareableCredits) <= 0
+)) {
+  throw new Error("MAX_SHAREABLE_CREDITS must be a positive integer.");
+}
 
 if (isProduction && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32)) {
   throw new Error("SESSION_SECRET must be at least 32 characters in production.");

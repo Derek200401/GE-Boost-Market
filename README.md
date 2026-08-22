@@ -4,15 +4,71 @@ Hydra is a small, server-rendered SMM ordering panel built with Express, EJS, Fi
 
 ## What changed
 
-- Modular routes, Firebase data access, provider client, middleware, and fixed catalog.
-- Warm charcoal / amber / indigo responsive interface with platform language and icons.
-- New users start at **0 credits**. Admin can add or deduct credit, ban/unban users, review all orders, and toggle maintenance mode.
-- Every order is revalidated on the server, uses the fixed catalog, requires a quantity of at least **3000**, checks user credit atomically, checks provider balance before deduction, and refunds a charge if the upstream order fails.
-- CSRF tokens, strict same-origin checks, Helmet headers, session cookies, request size limits, and rate limiting are included.
 
 No application can make a captured HTTPS request invisible to a user controlling their own browser. The realistic defense is to make captured values short-lived or session-bound, revalidate every value server-side, never ship secrets, use HTTPS, and monitor/rate-limit abuse. This project follows that model rather than claiming to defeat Burp/ZAP.
 
 ## Run locally
+
+## Source code overview
+
+Hydra is a server-rendered Express application. A request enters `server.js`, passes through the global security and maintenance checks, reaches one of the route modules, and normally ends in an EJS view. Firebase Realtime Database is accessed only through the backend; the browser uses the small JSON API in `routes/orders.js` for service lists and price quotes.
+
+### Application entry points
+
+- `server.js` creates the Express app, loads environment variables, configures EJS, Helmet, URL-encoded body parsing, sessions, rate limiting, origin validation, static files, maintenance mode, routes, 404 handling, and the final 500 handler. It also validates the production session secret and starts the HTTP listener.
+- `start.js` is the deployment wrapper. It verifies that `express` is available at runtime, prints a useful Railway volume diagnostic when dependencies are hidden, and then loads `server.js`.
+- `package.json` defines the Node 20 runtime, the `start` command, the syntax-check command, and dependencies: Express, EJS, Firebase Admin, sessions, security middleware, bcrypt, UUIDs, dotenv, and rate limiting.
+
+### Configuration, persistence, and integrations
+
+- `config/services.js` is the fixed public catalog. It defines the four categories, service names, provider service IDs, prices per 1,000, availability, and quantity limits. Tiktok comments are enabled only when their two environment variables are present. Helper functions retrieve categories and services by category or public ID.
+- `lib/db.js` is the Firebase data-access layer. It initializes Firebase Admin from either one service-account JSON variable or three separate credentials, then exposes user lookup/creation/update, atomic balance changes, order creation/query/update, status updates, and maintenance settings under the `hydra` database node.
+- `lib/firebaseSessionStore.js` implements the `express-session` store backed by `hydra/sessions`. It supports session get, set, destroy, and cookie touch operations. Production fails closed when Firebase is unavailable; development can fall back to the default in-memory store.
+- `services/jtsmmClient.js` is the provider adapter. It sends form-encoded requests with the server-only API key, applies a 20-second timeout, and exposes provider balance, single-order placement, single-order status, and up-to-100-order status lookup.
+- `firebase.rules.json` denies all direct client reads and writes. Only the trusted Firebase Admin SDK used by the server can access application data.
+
+### Middleware and security
+
+- `middleware/asyncHandler.js` forwards rejected promises from route handlers to Express error handling.
+- `middleware/auth.js` supplies user and admin guards, redirects authenticated visitors away from login/signup, blocks regular users during maintenance, and tracks activity for the admin online/offline indicator. Each authenticated user is reloaded from Firebase rather than trusted solely from the session.
+- `middleware/originCheck.js` checks the `Origin` or `Referer` host on mutating requests when `SITE_URL` is configured.
+- `middleware/rateLimit.js` defines a global limit, a stricter login/signup limit, and an order/status-refresh limit.
+- `lib/security.js` verifies Cloudflare Turnstile, bypassing it only in development when no secret is configured; it also creates per-session CSRF tokens and compares submitted tokens with a timing-safe comparison.
+
+### Routes and business behavior
+
+- `routes/auth.js` handles signup, login, and logout. Signup validates usernames and passwords, verifies Turnstile, hashes passwords with bcrypt, creates a zero-credit user, and redirects to login. Login verifies the password, supports the separately configured admin credentials, regenerates the session, records user activity, and rejects banned users.
+- `routes/dashboard.js` renders the order form with the available platform categories, CSRF token, and flash message.
+- `routes/orders.js` owns the order workflow and its JSON helpers. `/api/services` returns only public service metadata; `/api/quote` validates a service and quantity and calculates the charge. `POST /orders` revalidates every field, requires an HTTP(S) link and an allowed quantity, checks the user wallet, checks provider availability, atomically deducts credits, records a local order, submits it upstream, and refunds the user if storage or provider submission fails.
+- `routes/status.js` renders the signed-in user's orders with normalized display statuses. Its refresh endpoint batches pending provider IDs in groups of 100, updates local statuses, and reports success or failure through a flash message.
+- `routes/settings.js` renders account settings and changes a user's password only after CSRF validation, current-password verification, and new-password validation. It also supplies the configured admin Telegram contact.
+- `routes/admin.js` protects the admin console and provides user listing, activity state, balance add/deduct/set operations, ban/unban toggling, maintenance-mode toggling, and all-order history.
+
+### Browser assets and views
+
+- `public/js/app.js` controls the responsive navigation drawer and dynamically loads services and quotes from the order JSON endpoints. It updates the displayed total and keeps order submission disabled until the selected service and quantity are valid.
+- `public/css/style.css` contains the main layout, forms, cards, navigation, tables, buttons, alerts, order status badges, and responsive rules.
+- `public/css/theme.css` overrides the base palette with Hydra's charcoal, amber, indigo, and warm neutral theme.
+- `public/css/readable.css` improves contrast, focus states, mobile navigation, table readability, spacing, and reduced-motion behavior.
+- `views/partials/head.ejs` supplies shared metadata, the favicon, page title, and stylesheets. `views/partials/navbar.ejs` supplies desktop navigation, the brand, current balance, and admin link. `views/partials/drawer.ejs` supplies the mobile menu and logout form.
+- `views/login.ejs` and `views/signup.ejs` render authentication forms with CSRF and Turnstile fields. `views/dashboard.ejs` renders the order form. `views/status.ejs` renders order history and refresh controls. `views/settings.ejs` renders password and support settings. `views/admin.ejs` renders maintenance, user, balance, access, activity, and order-management tables.
+- `views/maintenance.ejs`, `views/404.ejs`, and `views/500.ejs` are the maintenance, not-found, and server-error responses. EJS escapes displayed user/provider values with `<%=` in the templates.
+
+### Request and order flow
+
+1. The browser loads the dashboard after authentication; the server supplies categories but never exposes provider credentials or provider IDs.
+2. The browser requests the selected category's public services and posts a quote request as the quantity changes.
+3. On submission, the server ignores client-side assumptions and repeats category, service, URL, quantity, price, balance, CSRF, and provider-availability checks.
+4. The server deducts the wallet transactionally, stores a `Submitting` order, calls the provider, then either records the provider order ID and `Pending` status or refunds the wallet and marks the order `Failed`.
+5. The status page reads local orders. Refresh batches pending IDs through the provider and maps provider states to `DONE`, `IN PROGRESS`, `PENDING`, or `CANCELED` for display.
+
+### Deployment and supporting files
+
+- `Dockerfile` builds the production image and installs Node dependencies.
+- `railway.json` describes Railway deployment behavior; Railway supplies `PORT` and starts through the package command.
+- `firebase.seed.json` contains optional Firebase seed data for initial setup.
+- `data/` is reserved for local or persistent application data when a deployment needs a narrow mounted storage path.
+- `CHANGELOG.md` records project changes. `README.md` contains setup, environment-variable, provider-contract, admin, security, and deployment documentation.
 
 ```bash
 cp .env.example .env
@@ -42,6 +98,7 @@ Open `http://localhost:3000`. In development Turnstile can be omitted. In produc
 | `API_KEY` | for live orders | provider API key, server-only |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | production | Cloudflare Turnstile |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | production | private admin credentials; both must be configured |
+| `MAX_SHAREABLE_CREDITS` | no; defaults to `700` | positive integer cap for the server-managed admin allocation pool |
 | `TIKTOK_COMMENT_SERVICE_ID` / `TIKTOK_COMMENT_PRICE` | optional | enables the configured default Tiktok comment service |
 | `ADMIN_TELEGRAM` | optional | support contact |
 | `FIREBASE_DATABASE_URL` | yes | Firebase RTDB URL |
