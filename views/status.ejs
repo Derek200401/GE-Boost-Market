@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { title: 'Boost Status - Hydra Boosting' }) %>
+  <%- include('partials/head', { title: 'Boost Status - GE Boost Market' }) %>
 </head>
 <body>
   <%- include('partials/navbar', { active: 'status' }) %>
@@ -42,7 +42,7 @@
               <div class="order-card-details">
                 <div><span class="detail-label">Platform:</span> <%= order.category %></div>
                 <div><span class="detail-label">Quantity:</span> <%= order.quantity.toLocaleString() %></div>
-                <div><span class="detail-label">Total Charge:</span> PHP <%= Number(order.totalCharge).toFixed(2) %></div>
+                <div><span class="detail-label">Total Charge:</span> Credits <%= Number(order.totalCharge).toFixed(2) %></div>
                 <div><span class="detail-label">Link:</span> <a href="<%= order.link %>" target="_blank" rel="noopener noreferrer">View</a></div>
                 <div><span class="detail-label">Ordered:</span> <%= new Date(order.createdAt).toLocaleString() %></div>
               </div>
@@ -54,7 +54,7 @@
   </main>
 
   <footer class="site-footer">
-    <strong>Hydra Boosting</strong>
+    <strong>GE Boost Market</strong>
     <span>Simple, transparent social media growth services with secure account management and real-time order tracking.</span>
     <small>Use only on accounts and content you own or are authorized to manage.</small>
   </footer>

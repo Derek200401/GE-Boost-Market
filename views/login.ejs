@@ -4,11 +4,11 @@
   <%- include('partials/head', { title: 'Log In - GE Boost Market' }) %>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-<body class="auth-body">
+<body class="auth-body login-body">
   <main class="auth-page">
     <div class="auth-card">
       <h1 class="brand-name auth-brand">GE Boost Market</h1>
-      <p class="auth-subtitle">Welcome back</p>
+      <p class="auth-subtitle">Welcome</p>
 
       <% if (error) { %>
         <div class="alert alert-error"><%= error %></div>

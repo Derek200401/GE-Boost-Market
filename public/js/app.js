@@ -48,13 +48,13 @@
     }
   }
   async function updateQuote() {
-    selected = service.selectedOptions[0]; submit.disabled = true; total.textContent = "PHP 0.00";
+    selected = service.selectedOptions[0]; submit.disabled = true; total.textContent = "Credits 0.00";
     if (!service.value || !quantity.value) return;
     try {
       const r = await fetch("/api/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({serviceId:service.value,quantity:quantity.value})});
       if (!r.ok) throw new Error("quote");
       const q = await r.json();
-      if(q.total) total.textContent=`PHP ${q.total}`;
+      if(q.total) total.textContent=`Credits ${q.total}`;
       submit.disabled=!(q.valid && q.available);
       document.querySelector("#quantityHint").textContent=q.min?`Minimum ${q.min.toLocaleString()} · Maximum ${q.max.toLocaleString()}`:"";
     } catch (error) {
