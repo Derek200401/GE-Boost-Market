@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { title: 'Boost Order - Hydra Boosting' }) %>
+  <%- include('partials/head', { title: 'Boost Order - GE Boost Market' }) %>
 </head>
 <body>
   <%- include('partials/navbar', { active: 'dashboard' }) %>
@@ -10,7 +10,7 @@
   <main class="page">
     <div class="container">
       <h1 class="page-title">Place a Boost Order</h1>
-      <p class="page-subtitle">Choose a platform, tell us where to boost, and we’ll handle the rest.</p>
+      <p class="page-subtitle">Choose a platform, tell us where to boost, and we'll handle the rest.</p>
 
       <% if (flash) { %>
         <div class="alert alert-<%= flash.type %>"><%= flash.message %></div>
@@ -21,7 +21,7 @@
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>" />
 
           <div class="form-group">
-              <label for="category">🌐 Platform</label>
+              <label for="category">🌐 Select Network</label>
             <select id="category" name="category" required>
                 <option value="" disabled selected>Select a platform</option>
               <% categories.forEach(function(cat) { %>
@@ -31,7 +31,7 @@
           </div>
 
           <div class="form-group">
-              <label for="serviceId">✨ Service</label>
+              <label for="serviceId">✨ Choose Boost</label>
             <select id="serviceId" name="serviceId" required disabled>
               <option value="" disabled selected>Select category first</option>
             </select>
@@ -39,7 +39,7 @@
           </div>
 
           <div class="form-group">
-              <label for="link">🔗 Link</label>
+              <label for="link">🔗 Drop Your Link</label>
             <input
               type="url"
               id="link"
@@ -50,7 +50,7 @@
           </div>
 
           <div class="form-group">
-              <label for="quantity">📈 Quantity</label>
+              <label for="quantity">📈 Set Your Reach</label>
             <input
               type="number"
               id="quantity"
@@ -63,7 +63,7 @@
           </div>
 
           <div class="total-box">
-            <span class="total-label">Total Charge</span>
+            <span class="total-label">💵 Final Amount</span>
             <span id="totalValue" class="total-value">PHP 0.00</span>
           </div>
 
@@ -76,11 +76,12 @@
   </main>
 
   <footer class="site-footer">
-    <strong>Hydra Boosting</strong>
-    <span>Simple, transparent social media growth services with secure account management and real-time order tracking.</span>
-    <small>Use only on accounts and content you own or are authorized to manage.</small>
+    <strong>GE Boosting Shop</strong>
+    <span>Reliable and streamlined social media growth services designed to help you manage your online presence with ease. Select your preferred platform and service, place your order securely, and monitor its progress through our convenient tracking system.</span>
+    <small>Please use our services only for accounts and content that you own or are authorized to manage.</small>
   </footer>
 
   <script src="/js/app.js"></script>
 </body>
 </html>
+
